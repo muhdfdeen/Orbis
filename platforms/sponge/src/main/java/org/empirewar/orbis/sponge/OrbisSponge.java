@@ -160,7 +160,7 @@ public class OrbisSponge extends OrbisPlatform {
         eventManager.registerListeners(
                 pluginContainer, new DamageEntityListener(this), MethodHandles.lookup());
         eventManager.registerListeners(
-                pluginContainer, new RegionMessagesListener(this), MethodHandles.lookup());
+                pluginContainer, new RegionEntryExitListener(this), MethodHandles.lookup());
     }
 
     @Override

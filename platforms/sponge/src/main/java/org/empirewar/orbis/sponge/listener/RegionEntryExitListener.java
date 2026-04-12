@@ -29,14 +29,18 @@ import org.empirewar.orbis.region.Region;
 import org.empirewar.orbis.sponge.OrbisSponge;
 import org.empirewar.orbis.sponge.api.RegionEnterEvent;
 import org.empirewar.orbis.sponge.api.RegionLeaveEvent;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.command.exception.CommandException;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.service.permission.PermissionService;
+import org.spongepowered.api.service.permission.Subject;
 
-public final class RegionMessagesListener {
+public final class RegionEntryExitListener {
 
     private final OrbisSponge orbis;
 
-    public RegionMessagesListener(OrbisSponge orbis) {
+    public RegionEntryExitListener(OrbisSponge orbis) {
         this.orbis = orbis;
     }
 
@@ -47,6 +51,13 @@ public final class RegionMessagesListener {
         region.query(RegionQuery.Flag.builder(DefaultFlags.ENTRY_MESSAGE))
                 .result()
                 .ifPresent(message -> player.sendMessage(orbis.miniMessage().deserialize(message)));
+
+        region.query(RegionQuery.Flag.builder(DefaultFlags.ENTRY_PLAYER_COMMANDS))
+                .result()
+                .ifPresent(commands -> commands.forEach(cmd -> processCommand(cmd, player, false)));
+        region.query(RegionQuery.Flag.builder(DefaultFlags.ENTRY_CONSOLE_COMMANDS))
+                .result()
+                .ifPresent(commands -> commands.forEach(cmd -> processCommand(cmd, player, true)));
     }
 
     @Listener
@@ -56,5 +67,34 @@ public final class RegionMessagesListener {
         region.query(RegionQuery.Flag.builder(DefaultFlags.EXIT_MESSAGE))
                 .result()
                 .ifPresent(message -> player.sendMessage(orbis.miniMessage().deserialize(message)));
+
+        region.query(RegionQuery.Flag.builder(DefaultFlags.EXIT_PLAYER_COMMANDS))
+                .result()
+                .ifPresent(commands -> commands.forEach(cmd -> processCommand(cmd, player, false)));
+        region.query(RegionQuery.Flag.builder(DefaultFlags.EXIT_CONSOLE_COMMANDS))
+                .result()
+                .ifPresent(commands -> commands.forEach(cmd -> processCommand(cmd, player, true)));
+    }
+
+    private void processCommand(String cmd, Player player, boolean console) {
+        cmd = cmd.replace("%player%", player.name())
+                .replace("%uuid%", player.uniqueId().toString());
+
+        try {
+            if (console) {
+                Sponge.server().commandManager().process(cmd);
+            } else {
+                final PermissionService permissionService =
+                        Sponge.server().serviceProvider().permissionService();
+                final Subject subject = permissionService
+                        .userSubjects()
+                        .subject(player.uniqueId().toString())
+                        .map(s -> (Subject) s)
+                        .orElse(permissionService.defaults());
+                Sponge.server().commandManager().process(subject, player, cmd);
+            }
+        } catch (CommandException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
