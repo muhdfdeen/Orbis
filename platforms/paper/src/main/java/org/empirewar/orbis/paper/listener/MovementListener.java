@@ -164,44 +164,6 @@ public class MovementListener implements Listener {
     }
 
     @EventHandler
-    public void onEnter(RegionEnterEvent event) {
-        final Player player = event.getPlayer();
-        final Region region = event.getRegion();
-        this.applyTimeChanges(player, event.getWorld(), event.getLocation());
-        region.query(RegionQuery.Flag.builder(DefaultFlags.ENTRY_MESSAGE))
-                .result()
-                .ifPresent(message -> player.sendMessage(orbis.miniMessage().deserialize(message)));
-        region.query(RegionQuery.Flag.builder(DefaultFlags.ENTRY_PLAYER_COMMANDS))
-                .result()
-                .ifPresent(commands -> commands.forEach(player::performCommand));
-        region.query(RegionQuery.Flag.builder(DefaultFlags.ENTRY_CONSOLE_COMMANDS))
-                .result()
-                .ifPresent(commands -> commands.forEach(cmd -> Bukkit.dispatchCommand(
-                        Bukkit.getConsoleSender(),
-                        cmd.replace("%player%", player.getName())
-                                .replace("%uuid%", player.getUniqueId().toString()))));
-    }
-
-    @EventHandler
-    public void onLeave(RegionLeaveEvent event) {
-        final Player player = event.getPlayer();
-        final Region region = event.getRegion();
-        this.applyTimeChanges(player, event.getWorld(), event.getLocation());
-        region.query(RegionQuery.Flag.builder(DefaultFlags.EXIT_MESSAGE))
-                .result()
-                .ifPresent(message -> player.sendMessage(orbis.miniMessage().deserialize(message)));
-        region.query(RegionQuery.Flag.builder(DefaultFlags.EXIT_PLAYER_COMMANDS))
-                .result()
-                .ifPresent(commands -> commands.forEach(player::performCommand));
-        region.query(RegionQuery.Flag.builder(DefaultFlags.EXIT_CONSOLE_COMMANDS))
-                .result()
-                .ifPresent(commands -> commands.forEach(cmd -> Bukkit.dispatchCommand(
-                        Bukkit.getConsoleSender(),
-                        cmd.replace("%player%", player.getName())
-                                .replace("%uuid%", player.getUniqueId().toString()))));
-    }
-
-    @EventHandler
     public void onElytraGlide(EntityToggleGlideEvent event) {
         if (!event.isGliding()) return;
         if (event.getEntity() instanceof Player player) {
@@ -217,15 +179,5 @@ public class MovementListener implements Listener {
                 event.setCancelled(true);
             }
         }
-    }
-
-    private void applyTimeChanges(Player player, RegionisedWorld world, Location location) {
-        final var timeResult = world.query(
-                        RegionQuery.Position.at(location.getX(), location.getY(), location.getZ())
-                                .build())
-                .query(RegionQuery.Flag.builder(DefaultFlags.TIME).player(player.getUniqueId()))
-                .result();
-        timeResult.ifPresentOrElse(
-                time -> player.setPlayerTime(time, false), player::resetPlayerTime);
     }
 }

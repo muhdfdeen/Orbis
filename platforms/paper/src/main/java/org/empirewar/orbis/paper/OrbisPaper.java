@@ -36,6 +36,7 @@ import org.empirewar.orbis.paper.listener.BlockActionListener;
 import org.empirewar.orbis.paper.listener.ConnectionListener;
 import org.empirewar.orbis.paper.listener.EntityListener;
 import org.empirewar.orbis.paper.listener.MovementListener;
+import org.empirewar.orbis.paper.listener.RegionEntryExitListener;
 import org.empirewar.orbis.paper.listener.SelectionListener;
 
 import java.io.IOException;
@@ -83,6 +84,7 @@ public class OrbisPaper extends JavaPlugin implements Listener {
         pluginManager.registerEvents(new BlockActionListener(platform), this);
         pluginManager.registerEvents(new EntityListener(platform), this);
         pluginManager.registerEvents(new MovementListener(platform), this);
+        pluginManager.registerEvents(new RegionEntryExitListener(platform), this);
         pluginManager.registerEvents(new ConnectionListener(platform), this);
         pluginManager.registerEvents(new SelectionListener(platform), this);
     }
